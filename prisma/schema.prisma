@@ -1,0 +1,41 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Member {
+  id        String     @id @default(uuid())
+  name      String
+  role      String
+
+  // relation (1 Member → many WorkItems)
+  createdWorkItems  WorkItem[] @relation("CreatedBy")
+  assignedWorkItems WorkItem[] @relation("AssignedTo")
+}
+
+model WorkItem {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  status      Status   @default(OPEN)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // created by
+  createdById String
+  createdBy   Member   @relation("CreatedBy", fields: [createdById], references: [id])
+
+  // assigned to
+  assignedToId String?
+  assignedTo   Member? @relation("AssignedTo", fields: [assignedToId], references: [id])
+}
+
+enum Status {
+  OPEN
+  IN_PROGRESS
+  DONE
+}
