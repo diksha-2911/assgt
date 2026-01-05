@@ -12,38 +12,55 @@ export class ItemsService {
 
   // CREATE
   async create(title: string, memberName: string, description?: string) {
-    const memberId = await this.prismaService.member.findFirst({
-      where: { name: memberName },
-    });
-    return this.prismaService.workItem.create({
-      data: {
-        title,
-        description,
-        status: 'OPEN',
-        createdBy: {
-          connect: {
-            id: memberId?.id || '', // Replace with actual default member ID
+    // ✅ keep transaction SHORT
+    return this.prismaService.$transaction(async (tx) => {
+      const member = await tx.member.findFirst({
+        where: { name: memberName },
+        select: { id: true },
+      });
+
+      if (!member) {
+        throw new NotFoundException('Creator member not found');
+      }
+      return tx.workItem.create({
+        data: {
+          title,
+          description,
+          status: 'OPEN',
+          createdBy: {
+            connect: { id: member.id },
           },
-        }, // default value
-      },
+        },
+      });
     });
   }
 
   //ASSIGN WORK ITEM
   async assignWorkItem(workItemId: string, memberName: string) {
-    const member = await this.prismaService.member.findFirst({
-      where: { name: memberName },
-    });
+    return this.prismaService.$transaction(async (tx) => {
+      const workItem = await tx.workItem.findUnique({
+        where: { id: workItemId },
+      });
 
-    return await this.prismaService.workItem.update({
-      where: { id: workItemId },
-      data: {
-        assignedTo: {
-          connect: {
-            id: member?.id || '', // Replace with actual default member ID
+      if (!workItem) {
+        throw new NotFoundException('Work item not found');
+      }
+
+      const member = await tx.member.findFirst({
+        where: { name: memberName },
+      });
+
+      if (!member) {
+        throw new NotFoundException('Member not found');
+      }
+      return tx.workItem.update({
+        where: { id: workItemId },
+        data: {
+          assignedTo: {
+            connect: { id: member.id },
           },
         },
-      },
+      });
     });
   }
 
@@ -56,26 +73,29 @@ export class ItemsService {
       status?: 'OPEN' | 'IN_PROGRESS' | 'DONE';
     },
   ) {
-    const existsWorkItem = await this.prismaService.workItem.findUnique({
-      where: { id },
-      select: { status: true },
-    });
+    return this.prismaService.$transaction(async (tx) => {
+      const workItem = await tx.workItem.findUnique({
+        where: { id },
+        select: { status: true },
+      });
 
-    if (!existsWorkItem) {
-      throw new NotFoundException('workItem not found');
-    }
+      if (!workItem) {
+        throw new NotFoundException('workItem not found');
+      }
 
-    // 🔐 Handle status update through transition rules
-    if (data.status && data.status !== existsWorkItem.status) {
-      await this.updateStatus(id, data.status);
-    }
+      // 🔐 Validate status transition (NO DB UPDATE HERE)
+      if (data.status && data.status !== workItem.status) {
+        this.updateStatus(workItem.status, data.status);
+      }
 
-    // 📝 Update remaining fields (exclude status to avoid double update)
-    const { status, ...rest } = data;
+      // 📝 Update remaining fields (exclude status to avoid double update)
+      const { status, ...rest } = data;
 
-    return this.prismaService.workItem.update({
-      where: { id },
-      data: rest,
+      // ✅ Single update call
+      return tx.workItem.update({
+        where: { id },
+        data: rest,
+      });
     });
   }
 
@@ -121,16 +141,19 @@ export class ItemsService {
 
   // DELETE
   async delete(id: string) {
-    const exists = await this.prismaService.workItem.findUnique({
-      where: { id },
-    });
+    return this.prismaService.$transaction(async (tx) => {
+      const workItem = await tx.workItem.findUnique({
+        where: { id },
+        select: { id: true },
+      });
 
-    if (!exists) {
-      throw new NotFoundException('workItem not found');
-    }
+      if (!workItem) {
+        throw new NotFoundException('workItem not found');
+      }
 
-    return this.prismaService.workItem.delete({
-      where: { id },
+      return tx.workItem.delete({
+        where: { id },
+      });
     });
   }
 }

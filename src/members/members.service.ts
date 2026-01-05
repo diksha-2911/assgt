@@ -7,24 +7,34 @@ export class MembersService {
 
   // CREATE MEMBER
   create(name: string, role: string) {
-    return this.prisma.member.create({
-      data: { name, role },
+    return this.prisma.$transaction(async (tx) => {
+      return tx.member.create({
+        data: { name, role },
+      });
     });
   }
 
   // UPDATE MEMBER ROLE
   async updateRole(id: string, role: string) {
-    const member = await this.prisma.member.findUnique({ where: { id } });
-    if (!member) throw new NotFoundException('Member not found');
+    return this.prisma.$transaction(async (tx) => {
+      const member = await tx.member.findUnique({
+        where: { id },
+        select: { id: true },
+      });
 
-    return this.prisma.member.update({
-      where: { id },
-      data: { role },
+      if (!member) {
+        throw new NotFoundException('Member not found');
+      }
+
+      return tx.member.update({
+        where: { id },
+        data: { role },
+      });
     });
   }
 
   // GET MEMBER (used for assignment validation)
-  findById(id: string) {
-    return this.prisma.member.findUnique({ where: { id } });
+  findAll() {
+    return this.prisma.member.findMany();
   }
 }

@@ -1,4 +1,4 @@
-import { Controller, Post, Patch, Body, Param } from '@nestjs/common';
+import { Controller, Post, Patch, Body, Param, Get } from '@nestjs/common';
 import { MembersService } from './members.service';
 
 @Controller('members')
@@ -15,5 +15,10 @@ export class MembersController {
   @Patch(':id/role')
   updateRole(@Param('id') id: string, @Body() body: { role: string }) {
     return this.membersService.updateRole(id, body.role);
+  }
+
+  @Get()
+  getAllMembers() {
+    return this.membersService.findAll();
   }
 }
