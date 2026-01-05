@@ -65,6 +65,16 @@ export class ItemsService {
     });
   }
 
+  async getItems() {
+    return await this.prismaService.workItem.findMany();
+  }
+
+  async getItemsById(id: string) {
+    return await this.prismaService.workItem.findUnique({
+      where: { id },
+    });
+  }
+
   // DELETE
   async delete(id: string) {
     const exists = await this.prismaService.workItem.findUnique({

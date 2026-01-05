@@ -12,7 +12,16 @@ export declare class ItemsService {
         createdById: string;
         assignedToId: string | null;
     }>;
-    assignWorkItem(workItemId: string, memberName: string): Promise<void>;
+    assignWorkItem(workItemId: string, memberName: string): Promise<{
+        status: import("@prisma/client").$Enums.Status;
+        id: string;
+        title: string;
+        description: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        createdById: string;
+        assignedToId: string | null;
+    }>;
     update(id: string, data: {
         title?: string;
         description?: string;
@@ -27,6 +36,26 @@ export declare class ItemsService {
         createdById: string;
         assignedToId: string | null;
     }>;
+    getItems(): Promise<{
+        status: import("@prisma/client").$Enums.Status;
+        id: string;
+        title: string;
+        description: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        createdById: string;
+        assignedToId: string | null;
+    }[]>;
+    getItemsById(id: string): Promise<{
+        status: import("@prisma/client").$Enums.Status;
+        id: string;
+        title: string;
+        description: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        createdById: string;
+        assignedToId: string | null;
+    } | null>;
     delete(id: string): Promise<{
         status: import("@prisma/client").$Enums.Status;
         id: string;

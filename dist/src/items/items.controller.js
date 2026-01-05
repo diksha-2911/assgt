@@ -20,6 +20,12 @@ let ItemController = class ItemController {
     constructor(itemsService) {
         this.itemsService = itemsService;
     }
+    async getItems() {
+        return this.itemsService.getItems();
+    }
+    async getItemsById(id) {
+        return this.itemsService.getItemsById(id);
+    }
     createWorkItem(body) {
         if (!body.title) {
             throw new common_1.BadRequestException('title is required');
@@ -37,6 +43,19 @@ let ItemController = class ItemController {
     }
 };
 exports.ItemController = ItemController;
+__decorate([
+    (0, common_1.Get)(),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], ItemController.prototype, "getItems", null);
+__decorate([
+    (0, common_1.Get)(':id'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], ItemController.prototype, "getItemsById", null);
 __decorate([
     (0, common_1.Post)(),
     __param(0, (0, common_1.Body)()),
