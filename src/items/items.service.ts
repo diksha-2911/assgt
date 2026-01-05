@@ -1,5 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { Status } from '@prisma/client';
 
 @Injectable()
 export class ItemsService {
@@ -51,17 +56,56 @@ export class ItemsService {
       status?: 'OPEN' | 'IN_PROGRESS' | 'DONE';
     },
   ) {
-    const exists = await this.prismaService.workItem.findUnique({
+    const existsWorkItem = await this.prismaService.workItem.findUnique({
       where: { id },
+      select: { status: true },
     });
 
-    if (!exists) {
+    if (!existsWorkItem) {
       throw new NotFoundException('workItem not found');
     }
 
+    // 🔐 Handle status update through transition rules
+    if (data.status && data.status !== existsWorkItem.status) {
+      await this.updateStatus(id, data.status);
+    }
+
+    // 📝 Update remaining fields (exclude status to avoid double update)
+    const { status, ...rest } = data;
+
     return this.prismaService.workItem.update({
       where: { id },
-      data,
+      data: rest,
+    });
+  }
+
+  async updateStatus(workItemId: string, newStatus: Status) {
+    const ALLOWED_STATUS_TRANSITIONS: Record<Status, readonly Status[]> = {
+      OPEN: ['IN_PROGRESS'],
+      IN_PROGRESS: ['DONE'],
+      DONE: [],
+    };
+
+    const workItem = await this.prismaService.workItem.findUnique({
+      where: { id: workItemId },
+    });
+
+    if (!workItem) {
+      throw new NotFoundException('Work item not found');
+    }
+
+    const currentStatus = workItem.status;
+    const allowedNextStatuses = ALLOWED_STATUS_TRANSITIONS[currentStatus];
+
+    if (!allowedNextStatuses.includes(newStatus)) {
+      throw new BadRequestException(
+        `Invalid status transition: ${currentStatus} → ${newStatus}`,
+      );
+    }
+
+    return this.prismaService.workItem.update({
+      where: { id: workItemId },
+      data: { status: newStatus },
     });
   }
 

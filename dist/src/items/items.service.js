@@ -50,15 +50,42 @@ let ItemsService = class ItemsService {
         });
     }
     async update(id, data) {
-        const exists = await this.prismaService.workItem.findUnique({
+        const existsWorkItem = await this.prismaService.workItem.findUnique({
             where: { id },
+            select: { status: true },
         });
-        if (!exists) {
+        if (!existsWorkItem) {
             throw new common_1.NotFoundException('workItem not found');
         }
+        if (data.status && data.status !== existsWorkItem.status) {
+            await this.updateStatus(id, data.status);
+        }
+        const { status, ...rest } = data;
         return this.prismaService.workItem.update({
             where: { id },
-            data,
+            data: rest,
+        });
+    }
+    async updateStatus(workItemId, newStatus) {
+        const ALLOWED_STATUS_TRANSITIONS = {
+            OPEN: ['IN_PROGRESS'],
+            IN_PROGRESS: ['DONE'],
+            DONE: [],
+        };
+        const workItem = await this.prismaService.workItem.findUnique({
+            where: { id: workItemId },
+        });
+        if (!workItem) {
+            throw new common_1.NotFoundException('Work item not found');
+        }
+        const currentStatus = workItem.status;
+        const allowedNextStatuses = ALLOWED_STATUS_TRANSITIONS[currentStatus];
+        if (!allowedNextStatuses.includes(newStatus)) {
+            throw new common_1.BadRequestException(`Invalid status transition: ${currentStatus} → ${newStatus}`);
+        }
+        return this.prismaService.workItem.update({
+            where: { id: workItemId },
+            data: { status: newStatus },
         });
     }
     async getItems() {
