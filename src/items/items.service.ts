@@ -30,11 +30,7 @@ export class ItemsService {
       where: { name: memberName },
     });
 
-    const workItem = await this.prismaService.workItem.findUnique({
-      where: { id: workItemId },
-    });
-
-    await this.prismaService.workItem.update({
+    return await this.prismaService.workItem.update({
       where: { id: workItemId },
       data: {
         assignedTo: {
