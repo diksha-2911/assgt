@@ -1,9 +1,9 @@
 import { IsAlpha, IsNotEmpty, IsString } from 'class-validator';
 
 export class AssignItemDto {
-  @IsAlpha()
+  @IsString()
   @IsNotEmpty()
-  memberName: string;
+  memberId: string;
 
   @IsString()
   @IsNotEmpty()

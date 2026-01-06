@@ -5,9 +5,9 @@ export class CreateItemDto {
   @IsNotEmpty()
   title: string;
 
-  @IsAlpha()
+  @IsString()
   @IsNotEmpty()
-  memberName: string;
+  memberId: string;
 
   @IsString()
   description: string;

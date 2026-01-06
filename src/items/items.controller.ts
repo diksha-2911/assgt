@@ -35,12 +35,12 @@ export class ItemController {
       throw new BadRequestException('title is required');
     }
 
-    return this.itemsService.create(dto.title, dto.memberName, dto.description);
+    return this.itemsService.create(dto.title, dto.memberId, dto.description);
   }
 
   @Post('assign')
   assignworkItems(@Body() dto: AssignItemDto) {
-    return this.itemsService.assignWorkItem(dto.workItemId, dto.memberName);
+    return this.itemsService.assignWorkItem(dto.workItemId, dto.memberId);
   }
 
   // UPDATE work item

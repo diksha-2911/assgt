@@ -11,12 +11,11 @@ export class ItemsService {
   constructor(private readonly prismaService: PrismaService) {}
 
   // CREATE
-  async create(title: string, memberName: string, description?: string) {
+  async create(title: string, memberId: string, description?: string) {
     // ✅ keep transaction SHORT
     return this.prismaService.$transaction(async (tx) => {
       const member = await tx.member.findFirst({
-        where: { name: memberName },
-        select: { id: true },
+        where: { id: memberId },
       });
 
       if (!member) {
@@ -36,7 +35,7 @@ export class ItemsService {
   }
 
   //ASSIGN WORK ITEM
-  async assignWorkItem(workItemId: string, memberName: string) {
+  async assignWorkItem(workItemId: string, memberId: string) {
     return this.prismaService.$transaction(async (tx) => {
       const workItem = await tx.workItem.findUnique({
         where: { id: workItemId },
@@ -47,7 +46,7 @@ export class ItemsService {
       }
 
       const member = await tx.member.findFirst({
-        where: { name: memberName },
+        where: { id: memberId },
       });
 
       if (!member) {
