@@ -5,7 +5,7 @@ export class CreateMemberDto {
   @IsNotEmpty()
   name: string;
 
-  @IsAlpha()
+  @IsString()
   @IsNotEmpty()
   role: string;
 }

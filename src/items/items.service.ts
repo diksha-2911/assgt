@@ -76,7 +76,7 @@ export class ItemsService {
     return this.prismaService.$transaction(async (tx) => {
       const workItem = await tx.workItem.findUnique({
         where: { id },
-        select: { status: true },
+        select: { status: true, id: true },
       });
 
       if (!workItem) {
@@ -85,7 +85,7 @@ export class ItemsService {
 
       // 🔐 Validate status transition (NO DB UPDATE HERE)
       if (data.status && data.status !== workItem.status) {
-        this.updateStatus(workItem.status, data.status);
+        await this.updateStatus(workItem.id, data.status);
       }
 
       // 📝 Update remaining fields (exclude status to avoid double update)

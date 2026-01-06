@@ -1,14 +1,25 @@
 import { Status } from '@prisma/client';
-import { IsAlpha, IsNotEmpty, isString, IsString } from 'class-validator';
+import {
+  IsAlpha,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  isString,
+  IsString,
+} from 'class-validator';
 
 export class UpdateItemDto {
-  @IsAlpha()
-  title: string;
+  @IsOptional()
+  @IsString()
+  title?: string;
 
-  @IsAlpha()
-  description: string;
+  @IsOptional()
+  @IsString()
+  description?: string;
 
-  @IsAlpha()
   @IsNotEmpty()
+  @IsEnum(Status, {
+    message: 'status must be one of: OPEN, IN_PROGRESS, DONE',
+  })
   status: Status;
 }

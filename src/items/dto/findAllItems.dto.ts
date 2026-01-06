@@ -1,5 +1,6 @@
-import { IsInt, IsOptional, IsString, Min } from 'class-validator';
+import { IsEnum, IsInt, IsOptional, IsString, Min } from 'class-validator';
 import { Type } from 'class-transformer';
+import { Status } from '@prisma/client';
 
 export class FindAllItemsDto {
   // Pagination
@@ -25,6 +26,8 @@ export class FindAllItemsDto {
   assignedToId?: string;
 
   @IsOptional()
-  @IsString()
+  @IsEnum(Status, {
+    message: 'status must be one of: OPEN, IN_PROGRESS, DONE',
+  })
   status?: string;
 }

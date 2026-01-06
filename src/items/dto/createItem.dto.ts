@@ -1,4 +1,4 @@
-import { IsAlpha, IsNotEmpty, IsString } from 'class-validator';
+import { IsAlpha, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateItemDto {
   @IsString()
@@ -10,5 +10,6 @@ export class CreateItemDto {
   memberId: string;
 
   @IsString()
+  @IsOptional()
   description: string;
 }
