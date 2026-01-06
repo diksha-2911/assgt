@@ -9,6 +9,9 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { ItemsService } from './items.service';
+import { CreateItemDto } from './dto/createItem.dto';
+import { AssignItemDto } from './dto/assignItem.dto';
+import { UpdateItemDto } from './dto/updateItem.dto';
 
 @Controller('items')
 export class ItemController {
@@ -27,23 +30,17 @@ export class ItemController {
 
   // CREATE work item
   @Post()
-  createWorkItem(
-    @Body() body: { memberName: string; title?: string; description?: string },
-  ) {
-    if (!body.title) {
+  createWorkItem(@Body() dto: CreateItemDto) {
+    if (!dto.title) {
       throw new BadRequestException('title is required');
     }
 
-    return this.itemsService.create(
-      body.title,
-      body.memberName,
-      body.description,
-    );
+    return this.itemsService.create(dto.title, dto.memberName, dto.description);
   }
 
   @Post('assign')
-  assignworkItems(@Body() body: { workItemId: string; memberName: string }) {
-    return this.itemsService.assignWorkItem(body.workItemId, body.memberName);
+  assignworkItems(@Body() dto: AssignItemDto) {
+    return this.itemsService.assignWorkItem(dto.workItemId, dto.memberName);
   }
 
   // UPDATE work item
@@ -51,13 +48,9 @@ export class ItemController {
   updateWorkItem(
     @Param('id') id: string,
     @Body()
-    body: {
-      title?: string;
-      description?: string;
-      status?: 'OPEN' | 'IN_PROGRESS' | 'DONE';
-    },
+    dto: UpdateItemDto,
   ) {
-    return this.itemsService.update(id, body);
+    return this.itemsService.update(id, dto);
   }
 
   // DELETE work item
