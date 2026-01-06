@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Status } from '@prisma/client';
+import { FindAllItemsDto } from './dto/findAllItems.dto';
 
 @Injectable()
 export class ItemsService {
@@ -128,8 +129,49 @@ export class ItemsService {
     });
   }
 
-  async getItems() {
-    return await this.prismaService.workItem.findMany();
+  async getItems(query: FindAllItemsDto) {
+    const { page, limit, title, assignedToId, status } = query;
+    const skip = (page - 1) * limit;
+
+    // Build Prisma where clause dynamically
+    const where: any = {
+      ...(assignedToId && { assignedToId }),
+      ...(status && { status }),
+      ...(title && {
+        OR: [
+          { title: { contains: title, mode: 'insensitive' } },
+          { description: { contains: title, mode: 'insensitive' } },
+        ],
+      }),
+    };
+
+    const [data, total] = await Promise.all([
+      this.prismaService.workItem.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prismaService.workItem.count({ where }),
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
+
+    if (page > totalPages && totalPages !== 0) {
+      throw new NotFoundException(
+        `Page ${page} exceeds total pages (${totalPages})`,
+      );
+    }
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages,
+      },
+    };
   }
 
   async getItemsById(id: string) {

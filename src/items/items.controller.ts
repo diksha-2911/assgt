@@ -7,11 +7,13 @@ import {
   Post,
   Get,
   BadRequestException,
+  Query,
 } from '@nestjs/common';
 import { ItemsService } from './items.service';
 import { CreateItemDto } from './dto/createItem.dto';
 import { AssignItemDto } from './dto/assignItem.dto';
 import { UpdateItemDto } from './dto/updateItem.dto';
+import { FindAllItemsDto } from './dto/findAllItems.dto';
 
 @Controller('items')
 export class ItemController {
@@ -19,8 +21,8 @@ export class ItemController {
 
   // Read Items
   @Get()
-  async getItems() {
-    return this.itemsService.getItems();
+  async getItems(@Query() query: FindAllItemsDto) {
+    return this.itemsService.getItems(query);
   }
 
   @Get(':id')
